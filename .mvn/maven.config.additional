@@ -1,1 +1,0 @@
--DOPEN_AI_KEY=${{ secrets.OPEN_AI_KEY }}

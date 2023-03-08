@@ -13,3 +13,5 @@ jobs:
       packages: write
     uses: dbstar-org/general/.github/workflows/maven.yml@v1
     secrets: inherit
+    env:
+      OPEN_AI_KEY: ${{ secrets.OPEN_AI_KEY }}
