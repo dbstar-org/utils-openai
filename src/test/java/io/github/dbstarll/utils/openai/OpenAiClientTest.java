@@ -15,6 +15,11 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 class OpenAiClientTest {
     private void useClient(final ThrowingConsumer<OpenAiClient> consumer) throws Throwable {
+        System.out.println("Properties: ");
+        System.getProperties().entrySet().forEach(System.out::println);
+        System.out.println("Environments: ");
+        System.getenv().entrySet().forEach(System.out::println);
+        System.out.println("----------------------");
         try (CloseableHttpClient client = proxy(new HttpClientFactory()).setAutomaticRetries(false).build()) {
             consumer.accept(new OpenAiClient(client, new ObjectMapper(), System.getProperty("OPEN_AI_KEY")));
         }
