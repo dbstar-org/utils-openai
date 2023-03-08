@@ -1,10 +1,15 @@
 package io.github.dbstarll.utils.openai;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.github.dbstarll.utils.http.client.request.RelativeUriResolver;
 import io.github.dbstarll.utils.json.jackson.JsonApiClient;
 import io.github.dbstarll.utils.net.api.ApiException;
+import io.github.dbstarll.utils.net.api.ApiParameterException;
+import io.github.dbstarll.utils.openai.model.api.Model;
+import io.github.dbstarll.utils.openai.model.response.Error;
 import io.github.dbstarll.utils.openai.model.response.Models;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpUriRequest;
@@ -13,6 +18,7 @@ import org.apache.http.client.methods.RequestBuilder;
 import java.io.IOException;
 
 import static org.apache.commons.lang3.Validate.notBlank;
+import static org.apache.commons.lang3.Validate.notNull;
 
 public final class OpenAiClient extends JsonApiClient {
     private final String apiKey;
@@ -41,11 +47,19 @@ public final class OpenAiClient extends JsonApiClient {
 
     @Override
     protected <T> T postProcessing(final HttpUriRequest request, final T executeResult) throws ApiException {
-        return super.postProcessing(request, executeResult);
+        final T result = super.postProcessing(request, executeResult);
+        if (result instanceof ObjectNode) {
+            final JsonNode error = ((ObjectNode) result).get("error");
+            if (error != null) {
+                throw new ApiErrorException(mapper.convertValue(error, Error.class));
+            }
+        }
+        return result;
     }
 
     /**
-     * List models.
+     * Lists the currently available models, and provides basic information
+     * about each one such as the owner and availability.
      *
      * @return Models
      * @throws ApiException exception on api call
@@ -54,5 +68,23 @@ public final class OpenAiClient extends JsonApiClient {
      */
     public Models models() throws ApiException, IOException {
         return executeObject(get("/models").build(), Models.class);
+    }
+
+    /**
+     * Retrieves a model instance, providing basic information about the model such as the owner and permissioning.
+     *
+     * @param model The ID of the model to use for this request
+     * @return Model
+     * @throws ApiException exception on api call
+     * @throws IOException  exception on io
+     * @see <a href="https://platform.openai.com/docs/api-reference/models/retrieve">Retrieve model</a>
+     */
+    public Model model(final String model) throws ApiException, IOException {
+        try {
+            notNull(model, "model is Required");
+        } catch (NullPointerException ex) {
+            throw new ApiParameterException(ex);
+        }
+        return executeObject(get("/models/" + model).build(), Model.class);
     }
 }

@@ -2,6 +2,7 @@ package io.github.dbstarll.utils.openai;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.dbstarll.utils.http.client.HttpClientFactory;
+import io.github.dbstarll.utils.openai.model.api.Model;
 import io.github.dbstarll.utils.openai.model.response.Models;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -13,6 +14,8 @@ import java.net.Proxy.Type;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrowsExactly;
 
 class OpenAiClientTest {
     private static final String TOKEN_KEY = "OPEN_AI_KEY";
@@ -59,6 +62,27 @@ class OpenAiClientTest {
             assertNotNull(models);
             assertEquals("list", models.getObject());
             models.getData().forEach(System.out::println);
+        });
+    }
+
+    @Test
+    void model() throws Throwable {
+        useClient(c -> {
+            final Model model = c.model("gpt-3.5-turbo");
+            assertNotNull(model);
+            assertEquals("gpt-3.5-turbo", model.getId());
+            assertEquals("model", model.getObject());
+        });
+    }
+
+    @Test
+    void modelUnknown() throws Throwable {
+        useClient(c -> {
+            final ApiErrorException e = assertThrowsExactly(ApiErrorException.class, () -> c.model("unknown"));
+            assertEquals("That model does not exist", e.getError().getMessage());
+            assertEquals("invalid_request_error", e.getError().getType());
+            assertEquals("model", e.getError().getParam());
+            assertNull(e.getError().getCode());
         });
     }
 }
