@@ -10,7 +10,7 @@ public final class Permission extends Base {
     private boolean allowView;
     private boolean allowFineTuning;
     private String organization;
-    private Object group;
+    private String group;
     private boolean isBlocking;
 
     public boolean isAllowCreateEngine() {
@@ -69,11 +69,11 @@ public final class Permission extends Base {
         this.organization = organization;
     }
 
-    public Object getGroup() {
+    public String getGroup() {
         return group;
     }
 
-    public void setGroup(final Object group) {
+    public void setGroup(final String group) {
         this.group = group;
     }
 
