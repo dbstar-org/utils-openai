@@ -7,9 +7,6 @@ on:
       - '.github/workflows/release.yml'
       - 'README.md'
 
-env:
-  OPEN_AI_KEY: ${{ secrets.OPEN_AI_KEY }}
-
 jobs:
   maven:
     permissions:
