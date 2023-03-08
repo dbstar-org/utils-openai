@@ -7,11 +7,12 @@ on:
       - '.github/workflows/release.yml'
       - 'README.md'
 
+env:
+  OPEN_AI_KEY: ${{ secrets.OPEN_AI_KEY }}
+
 jobs:
   maven:
     permissions:
       packages: write
     uses: dbstar-org/general/.github/workflows/maven.yml@v1
     secrets: inherit
-    env:
-      OPEN_AI_KEY: ${{ secrets.OPEN_AI_KEY }}
