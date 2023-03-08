@@ -1,5 +1,8 @@
 package io.github.dbstarll.utils.openai.model.api;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import io.github.dbstarll.utils.openai.model.DateConverter;
+
 import java.io.Serializable;
 import java.util.Date;
 import java.util.StringJoiner;
@@ -7,6 +10,7 @@ import java.util.StringJoiner;
 public abstract class Base implements Serializable {
     private String id;
     private String object;
+    @JsonDeserialize(converter = DateConverter.class)
     private Date created;
 
     public String getId() {

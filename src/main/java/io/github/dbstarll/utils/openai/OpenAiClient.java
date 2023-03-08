@@ -25,10 +25,13 @@ public final class OpenAiClient extends JsonApiClient {
      * @param apiKey     API key
      */
     public OpenAiClient(final HttpClient httpClient, final ObjectMapper mapper, final String apiKey) {
-        super(httpClient, true, mapper.copy()
-                .setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE));
+        super(httpClient, true, optimize(mapper.copy()));
         this.apiKey = notBlank(apiKey, "apiKey is blank");
         setUriResolver(new RelativeUriResolver("https://api.openai.com/v1", "/v1"));
+    }
+
+    private static ObjectMapper optimize(final ObjectMapper mapper) {
+        return mapper.setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE);
     }
 
     @Override
@@ -41,6 +44,14 @@ public final class OpenAiClient extends JsonApiClient {
         return super.postProcessing(request, executeResult);
     }
 
+    /**
+     * List models.
+     *
+     * @return Models
+     * @throws ApiException exception on api call
+     * @throws IOException  exception on io
+     * @see <a href="https://platform.openai.com/docs/api-reference/models/list">List models</a>
+     */
     public Models models() throws ApiException, IOException {
         return executeObject(get("/models").build(), Models.class);
     }
