@@ -9,34 +9,74 @@ public final class Model extends Base {
     private Object parent;
     private List<Permission> permission;
 
+    /**
+     * 获得ownedBy.
+     *
+     * @return ownedBy
+     */
     public String getOwnedBy() {
         return ownedBy;
     }
 
+    /**
+     * 设置ownedBy.
+     *
+     * @param ownedBy ownedBy
+     */
     public void setOwnedBy(final String ownedBy) {
         this.ownedBy = ownedBy;
     }
 
+    /**
+     * 获得root.
+     *
+     * @return root
+     */
     public String getRoot() {
         return root;
     }
 
+    /**
+     * 设置root.
+     *
+     * @param root root
+     */
     public void setRoot(final String root) {
         this.root = root;
     }
 
+    /**
+     * 获得parent.
+     *
+     * @return parent
+     */
     public Object getParent() {
         return parent;
     }
 
+    /**
+     * 设置parent.
+     *
+     * @param parent parent
+     */
     public void setParent(final Object parent) {
         this.parent = parent;
     }
 
+    /**
+     * 获得Permission列表.
+     *
+     * @return Permission列表
+     */
     public List<Permission> getPermission() {
         return permission;
     }
 
+    /**
+     * 设置Permission列表.
+     *
+     * @param permission Permission列表
+     */
     public void setPermission(final List<Permission> permission) {
         this.permission = permission;
     }

@@ -83,6 +83,7 @@ class OpenAiClientTest {
             assertEquals("invalid_request_error", e.getError().getType());
             assertEquals("model", e.getError().getParam());
             assertNull(e.getError().getCode());
+            assertEquals("Error[message='That model does not exist', type='invalid_request_error', param='model', code='null']", e.getError().toString());
         });
     }
 }

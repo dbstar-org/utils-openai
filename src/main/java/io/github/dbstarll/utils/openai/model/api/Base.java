@@ -13,27 +13,57 @@ public abstract class Base implements Serializable {
     @JsonDeserialize(converter = DateConverter.class)
     private Date created;
 
-    public String getId() {
+    /**
+     * 获得id.
+     *
+     * @return id
+     */
+    public final String getId() {
         return id;
     }
 
-    public void setId(final String id) {
+    /**
+     * 设置id.
+     *
+     * @param id id
+     */
+    public final void setId(final String id) {
         this.id = id;
     }
 
-    public String getObject() {
+    /**
+     * 获得object.
+     *
+     * @return object
+     */
+    public final String getObject() {
         return object;
     }
 
-    public void setObject(final String object) {
+    /**
+     * 设置object.
+     *
+     * @param object object
+     */
+    public final void setObject(final String object) {
         this.object = object;
     }
 
-    public Date getCreated() {
+    /**
+     * 获得创建时间.
+     *
+     * @return 创建时间
+     */
+    public final Date getCreated() {
         return created;
     }
 
-    public void setCreated(final Date created) {
+    /**
+     * 设置创建时间.
+     *
+     * @param created 创建时间
+     */
+    public final void setCreated(final Date created) {
         this.created = created;
     }
 

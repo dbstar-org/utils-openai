@@ -7,7 +7,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.github.dbstarll.utils.http.client.request.RelativeUriResolver;
 import io.github.dbstarll.utils.json.jackson.JsonApiClient;
 import io.github.dbstarll.utils.net.api.ApiException;
-import io.github.dbstarll.utils.net.api.ApiParameterException;
 import io.github.dbstarll.utils.openai.model.api.Model;
 import io.github.dbstarll.utils.openai.model.response.Error;
 import io.github.dbstarll.utils.openai.model.response.Models;
@@ -80,11 +79,6 @@ public final class OpenAiClient extends JsonApiClient {
      * @see <a href="https://platform.openai.com/docs/api-reference/models/retrieve">Retrieve model</a>
      */
     public Model model(final String model) throws ApiException, IOException {
-        try {
-            notNull(model, "model is Required");
-        } catch (NullPointerException ex) {
-            throw new ApiParameterException(ex);
-        }
-        return executeObject(get("/models/" + model).build(), Model.class);
+        return executeObject(get("/models/" + notNull(model, "model is Required")).build(), Model.class);
     }
 }
