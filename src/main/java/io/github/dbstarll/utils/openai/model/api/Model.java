@@ -7,7 +7,7 @@ public final class Model extends Base {
     private String ownedBy;
     private String root;
     private Object parent;
-    private List<Permission> permission;
+    private List<ModelPermission> permission;
 
     /**
      * 获得ownedBy.
@@ -68,7 +68,7 @@ public final class Model extends Base {
      *
      * @return Permission列表
      */
-    public List<Permission> getPermission() {
+    public List<ModelPermission> getPermission() {
         return permission;
     }
 
@@ -77,7 +77,7 @@ public final class Model extends Base {
      *
      * @param permission Permission列表
      */
-    public void setPermission(final List<Permission> permission) {
+    public void setPermission(final List<ModelPermission> permission) {
         this.permission = permission;
     }
 

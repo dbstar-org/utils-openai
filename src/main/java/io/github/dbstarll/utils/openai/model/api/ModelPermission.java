@@ -2,7 +2,7 @@ package io.github.dbstarll.utils.openai.model.api;
 
 import java.util.StringJoiner;
 
-public final class Permission extends Base {
+public final class ModelPermission extends Base {
     private boolean allowCreateEngine;
     private boolean allowSampling;
     private boolean allowLogprobs;

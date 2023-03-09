@@ -1,27 +1,27 @@
 package io.github.dbstarll.utils.openai;
 
 import io.github.dbstarll.utils.net.api.ApiProtocolException;
-import io.github.dbstarll.utils.openai.model.response.Error;
+import io.github.dbstarll.utils.openai.model.response.ApiError;
 
 public final class ApiErrorException extends ApiProtocolException {
-    private final Error error;
+    private final ApiError apiError;
 
     /**
-     * 从Error来构造.
+     * 从ApiError来构造.
      *
-     * @param error Error
+     * @param apiError ApiError
      */
-    public ApiErrorException(final Error error) {
-        super(error.getMessage(), null);
-        this.error = error;
+    public ApiErrorException(final ApiError apiError) {
+        super(apiError.getMessage(), null);
+        this.apiError = apiError;
     }
 
     /**
-     * 获得Error信息.
+     * 获得ApiError信息.
      *
-     * @return Error
+     * @return ApiError
      */
-    public Error getError() {
-        return error;
+    public ApiError getApiError() {
+        return apiError;
     }
 }

@@ -3,7 +3,7 @@ package io.github.dbstarll.utils.openai.model.response;
 import java.io.Serializable;
 import java.util.StringJoiner;
 
-public final class Error implements Serializable {
+public final class ApiError implements Serializable {
     private String message;
     private String type;
     private String param;
@@ -83,7 +83,7 @@ public final class Error implements Serializable {
 
     @Override
     public String toString() {
-        return new StringJoiner(", ", Error.class.getSimpleName() + "[", "]")
+        return new StringJoiner(", ", ApiError.class.getSimpleName() + "[", "]")
                 .add("message='" + message + "'")
                 .add("type='" + type + "'")
                 .add("param='" + param + "'")

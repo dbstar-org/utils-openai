@@ -2,9 +2,10 @@ package io.github.dbstarll.utils.openai.model.response;
 
 import io.github.dbstarll.utils.openai.model.api.Model;
 
+import java.io.Serializable;
 import java.util.List;
 
-public final class Models {
+public final class Models implements Serializable {
     private String object;
     private List<Model> data;
 

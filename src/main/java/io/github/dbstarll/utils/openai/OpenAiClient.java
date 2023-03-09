@@ -1,5 +1,6 @@
 package io.github.dbstarll.utils.openai;
 
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
@@ -8,11 +9,16 @@ import io.github.dbstarll.utils.http.client.request.RelativeUriResolver;
 import io.github.dbstarll.utils.json.jackson.JsonApiClient;
 import io.github.dbstarll.utils.net.api.ApiException;
 import io.github.dbstarll.utils.openai.model.api.Model;
-import io.github.dbstarll.utils.openai.model.response.Error;
+import io.github.dbstarll.utils.openai.model.api.TextCompletion;
+import io.github.dbstarll.utils.openai.model.request.CompletionRequest;
+import io.github.dbstarll.utils.openai.model.response.ApiError;
 import io.github.dbstarll.utils.openai.model.response.Models;
+import org.apache.http.HttpEntity;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.entity.EntityBuilder;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.methods.RequestBuilder;
+import org.apache.http.entity.ContentType;
 
 import java.io.IOException;
 
@@ -36,7 +42,9 @@ public final class OpenAiClient extends JsonApiClient {
     }
 
     private static ObjectMapper optimize(final ObjectMapper mapper) {
-        return mapper.setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE);
+        return mapper
+                .setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE)
+                .setSerializationInclusion(Include.NON_NULL);
     }
 
     @Override
@@ -50,7 +58,7 @@ public final class OpenAiClient extends JsonApiClient {
         if (result instanceof ObjectNode) {
             final JsonNode error = ((ObjectNode) result).get("error");
             if (error != null) {
-                throw new ApiErrorException(mapper.convertValue(error, Error.class));
+                throw new ApiErrorException(mapper.convertValue(error, ApiError.class));
             }
         }
         return result;
@@ -80,5 +88,23 @@ public final class OpenAiClient extends JsonApiClient {
      */
     public Model model(final String model) throws ApiException, IOException {
         return executeObject(get("/models/" + notNull(model, "model is Required")).build(), Model.class);
+    }
+
+    /**
+     * Creates a completion for the provided prompt and parameters.
+     *
+     * @param request CompletionRequest
+     * @return TextCompletion
+     * @throws ApiException exception on api call
+     * @throws IOException  exception on io
+     * @see <a href="https://platform.openai.com/docs/api-reference/completions/create">Create completion</a>
+     */
+    public TextCompletion completions(final CompletionRequest request) throws ApiException, IOException {
+        final String json = mapper.writeValueAsString(request);
+        final HttpEntity entity = EntityBuilder.create().setText(json)
+                .setContentType(ContentType.APPLICATION_JSON).setContentEncoding("UTF-8").build();
+        final HttpUriRequest httpUriRequest = post("/completions").setEntity(entity).build();
+        logger.trace("json: [{}]@{} with {}", httpUriRequest, httpUriRequest.hashCode(), json);
+        return executeObject(httpUriRequest, TextCompletion.class);
     }
 }

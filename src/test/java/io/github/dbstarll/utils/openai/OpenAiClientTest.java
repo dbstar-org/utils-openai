@@ -3,6 +3,9 @@ package io.github.dbstarll.utils.openai;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.dbstarll.utils.http.client.HttpClientFactory;
 import io.github.dbstarll.utils.openai.model.api.Model;
+import io.github.dbstarll.utils.openai.model.api.TextCompletion;
+import io.github.dbstarll.utils.openai.model.fragment.Choice;
+import io.github.dbstarll.utils.openai.model.request.CompletionRequest;
 import io.github.dbstarll.utils.openai.model.response.Models;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -79,11 +82,54 @@ class OpenAiClientTest {
     void modelUnknown() throws Throwable {
         useClient(c -> {
             final ApiErrorException e = assertThrowsExactly(ApiErrorException.class, () -> c.model("unknown"));
-            assertEquals("That model does not exist", e.getError().getMessage());
-            assertEquals("invalid_request_error", e.getError().getType());
-            assertEquals("model", e.getError().getParam());
-            assertNull(e.getError().getCode());
-            assertEquals("Error[message='That model does not exist', type='invalid_request_error', param='model', code='null']", e.getError().toString());
+            assertEquals("ApiError[message='That model does not exist', type='invalid_request_error', param='model', code='null']", e.getApiError().toString());
+            assertEquals("That model does not exist", e.getApiError().getMessage());
+            assertEquals("invalid_request_error", e.getApiError().getType());
+            assertEquals("model", e.getApiError().getParam());
+            assertNull(e.getApiError().getCode());
+        });
+    }
+
+    @Test
+    void completions() throws Throwable {
+        useClient(c -> {
+            final CompletionRequest request = new CompletionRequest();
+            request.setModel("text-ada-001");
+            request.setPrompt("Say this is a test");
+            request.setLogprobs(2);
+            request.setUser("dbstar");
+            request.setTemperature(0.2f);
+            request.setEcho(true);
+            request.setSuffix(null);
+            request.setTopP(null);
+            request.setN(null);
+            request.setStream(null);
+            request.setStop(null);
+            request.setPresencePenalty(null);
+            request.setFrequencyPenalty(null);
+            request.setBestOf(null);
+            request.setLogitBias(null);
+            final TextCompletion completion = c.completions(request);
+            System.out.println(completion);
+            assertEquals("text_completion", completion.getObject());
+            assertEquals("text-ada-001", completion.getModel());
+            assertEquals(1, completion.getChoices().size());
+            final Choice choice = completion.getChoices().get(0);
+            assertEquals(0, choice.getIndex());
+            assertNotNull(choice.getLogprobs());
+        });
+    }
+
+    @Test
+    void completionsNoModel() throws Throwable {
+        useClient(c -> {
+            final CompletionRequest request = new CompletionRequest();
+            final ApiErrorException e = assertThrowsExactly(ApiErrorException.class, () -> c.completions(request));
+            assertEquals("ApiError[message='you must provide a model parameter', type='invalid_request_error', param='null', code='null']", e.getApiError().toString());
+            assertEquals("you must provide a model parameter", e.getApiError().getMessage());
+            assertEquals("invalid_request_error", e.getApiError().getType());
+            assertNull(e.getApiError().getParam());
+            assertNull(e.getApiError().getCode());
         });
     }
 }

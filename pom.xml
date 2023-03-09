@@ -25,8 +25,8 @@
   <properties>
     <project.git.project>utils-openai</project.git.project>
     <!-- module version -->
-    <version.utils-net-api>1.0.3</version.utils-net-api>
-    <version.utils-json>1.0.3</version.utils-json>
+    <version.utils-net-api>1.0.4-SNAPSHOT</version.utils-net-api>
+    <version.utils-json>1.0.4-SNAPSHOT</version.utils-json>
     <version.jackson>2.14.2</version.jackson>
   </properties>
 

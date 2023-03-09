@@ -15,5 +15,5 @@
   </root>
 
   <!--定义自定义package-->
-  <logger name="io.github.dbstarll.utils" level="debug"/>
+  <logger name="io.github.dbstarll.utils.openai" level="trace"/>
 </configuration>
