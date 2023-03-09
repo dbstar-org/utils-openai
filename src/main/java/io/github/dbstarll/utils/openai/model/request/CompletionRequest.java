@@ -55,7 +55,7 @@ public final class CompletionRequest implements Serializable {
      * <p>
      * string or array
      * Optional
-     * Defaults to <|endoftext|>
+     * Defaults to &lt;|endoftext|&gt;
      * </p>
      *
      * @return prompt
@@ -408,7 +408,7 @@ public final class CompletionRequest implements Serializable {
      * </p>
      *
      * <p>
-     * As an example, you can pass {"50256": -100} to prevent the <|endoftext|> token from being generated.
+     * As an example, you can pass {"50256": -100} to prevent the &lt;|endoftext|&gt; token from being generated.
      * </p>
      *
      * <p>
