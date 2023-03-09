@@ -8,8 +8,10 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.github.dbstarll.utils.http.client.request.RelativeUriResolver;
 import io.github.dbstarll.utils.json.jackson.JsonApiClient;
 import io.github.dbstarll.utils.net.api.ApiException;
+import io.github.dbstarll.utils.openai.model.api.ChatCompletion;
 import io.github.dbstarll.utils.openai.model.api.Model;
 import io.github.dbstarll.utils.openai.model.api.TextCompletion;
+import io.github.dbstarll.utils.openai.model.request.ChatRequest;
 import io.github.dbstarll.utils.openai.model.request.CompletionRequest;
 import io.github.dbstarll.utils.openai.model.response.ApiError;
 import io.github.dbstarll.utils.openai.model.response.Models;
@@ -106,5 +108,23 @@ public final class OpenAiClient extends JsonApiClient {
         final HttpUriRequest httpUriRequest = post("/completions").setEntity(entity).build();
         logger.trace("json: [{}]@{} with {}", httpUriRequest, httpUriRequest.hashCode(), json);
         return executeObject(httpUriRequest, TextCompletion.class);
+    }
+
+    /**
+     * Creates a completion for the chat message.
+     *
+     * @param request ChatRequest
+     * @return TextCompletion
+     * @throws ApiException exception on api call
+     * @throws IOException  exception on io
+     * @see <a href="https://platform.openai.com/docs/api-reference/chat/create">Create chat completion</a>
+     */
+    public ChatCompletion chat(final ChatRequest request) throws ApiException, IOException {
+        final String json = mapper.writeValueAsString(request);
+        final HttpEntity entity = EntityBuilder.create().setText(json)
+                .setContentType(ContentType.APPLICATION_JSON).setContentEncoding("UTF-8").build();
+        final HttpUriRequest httpUriRequest = post("/chat/completions").setEntity(entity).build();
+        logger.trace("json: [{}]@{} with {}", httpUriRequest, httpUriRequest.hashCode(), json);
+        return executeObject(httpUriRequest, ChatCompletion.class);
     }
 }

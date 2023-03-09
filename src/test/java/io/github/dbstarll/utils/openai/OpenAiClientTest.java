@@ -2,9 +2,13 @@ package io.github.dbstarll.utils.openai;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.dbstarll.utils.http.client.HttpClientFactory;
+import io.github.dbstarll.utils.openai.model.api.ChatCompletion;
 import io.github.dbstarll.utils.openai.model.api.Model;
 import io.github.dbstarll.utils.openai.model.api.TextCompletion;
-import io.github.dbstarll.utils.openai.model.fragment.Choice;
+import io.github.dbstarll.utils.openai.model.fragment.ChatChoice;
+import io.github.dbstarll.utils.openai.model.fragment.Message;
+import io.github.dbstarll.utils.openai.model.fragment.TextChoice;
+import io.github.dbstarll.utils.openai.model.request.ChatRequest;
 import io.github.dbstarll.utils.openai.model.request.CompletionRequest;
 import io.github.dbstarll.utils.openai.model.response.Models;
 import org.apache.commons.lang3.StringUtils;
@@ -14,6 +18,7 @@ import org.junit.jupiter.api.function.ThrowingConsumer;
 
 import java.net.Proxy;
 import java.net.Proxy.Type;
+import java.util.Arrays;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -110,12 +115,12 @@ class OpenAiClientTest {
             request.setBestOf(null);
             request.setLogitBias(null);
             final TextCompletion completion = c.completions(request);
-            System.out.println(completion);
             assertEquals("text_completion", completion.getObject());
             assertEquals("text-ada-001", completion.getModel());
             assertEquals(1, completion.getChoices().size());
-            final Choice choice = completion.getChoices().get(0);
+            final TextChoice choice = completion.getChoices().get(0);
             assertEquals(0, choice.getIndex());
+            assertNotNull(choice.getText());
             assertNotNull(choice.getLogprobs());
         });
     }
@@ -130,6 +135,27 @@ class OpenAiClientTest {
             assertEquals("invalid_request_error", e.getApiError().getType());
             assertNull(e.getApiError().getParam());
             assertNull(e.getApiError().getCode());
+        });
+    }
+
+    @Test
+    void chat() throws Throwable {
+        useClient(c -> {
+            final ChatRequest request = new ChatRequest();
+            request.setModel("gpt-3.5-turbo");
+            request.setMaxTokens(32);
+            request.setMessages(Arrays.asList(
+                    Message.system("You are a helpful assistant."),
+                    Message.user("Hello!"),
+                    Message.assistant("Nice to meet you!"),
+                    Message.user("Say this is a test")));
+            final ChatCompletion completion = c.chat(request);
+            assertEquals("chat.completion", completion.getObject());
+            assertEquals("gpt-3.5-turbo-0301", completion.getModel());
+            assertEquals(1, completion.getChoices().size());
+            final ChatChoice choice = completion.getChoices().get(0);
+            assertEquals(0, choice.getIndex());
+            assertNotNull(choice.getMessage());
         });
     }
 }
