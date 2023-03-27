@@ -29,7 +29,7 @@ class OpenAiClientTest {
     private static final String TOKEN_KEY = "OPEN_AI_KEY";
 
     private void useClient(final ThrowingConsumer<OpenAiClient> consumer) throws Throwable {
-        try (CloseableHttpClient client = proxy(new HttpClientFactory()).setAutomaticRetries(false).build()) {
+        try (CloseableHttpClient client = proxy(new HttpClientFactory()).setSocketTimeout(5000).setAutomaticRetries(false).build()) {
             consumer.accept(new OpenAiClient(client, new ObjectMapper(), getOpenAiKey()));
         }
     }
@@ -87,11 +87,11 @@ class OpenAiClientTest {
     void modelUnknown() throws Throwable {
         useClient(c -> {
             final ApiErrorException e = assertThrowsExactly(ApiErrorException.class, () -> c.model("unknown"));
-            assertEquals("ApiError[message='That model does not exist', type='invalid_request_error', param='model', code='null']", e.getApiError().toString());
-            assertEquals("That model does not exist", e.getApiError().getMessage());
+            assertEquals("ApiError[message='The model 'unknown' does not exist', type='invalid_request_error', param='model', code='model_not_found']", e.getApiError().toString());
+            assertEquals("The model 'unknown' does not exist", e.getApiError().getMessage());
             assertEquals("invalid_request_error", e.getApiError().getType());
             assertEquals("model", e.getApiError().getParam());
-            assertNull(e.getApiError().getCode());
+            assertEquals("model_not_found", e.getApiError().getCode());
         });
     }
 
