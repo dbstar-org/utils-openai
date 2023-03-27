@@ -8,7 +8,6 @@ import io.github.dbstarll.utils.http.client.request.RelativeUriResolver;
 import io.github.dbstarll.utils.json.jackson.JsonApiAsyncClient;
 import io.github.dbstarll.utils.net.api.ApiException;
 import io.github.dbstarll.utils.net.api.StreamFutureCallback;
-import io.github.dbstarll.utils.openai.model.api.ChatCompletion;
 import io.github.dbstarll.utils.openai.model.request.ChatRequest;
 import io.github.dbstarll.utils.openai.model.request.CompletionRequest;
 import org.apache.hc.client5.http.async.HttpAsyncClient;
@@ -90,12 +89,12 @@ public final class OpenAiAsyncClient extends JsonApiAsyncClient {
      * @throws IOException  exception on io
      * @see <a href="https://platform.openai.com/docs/api-reference/chat/create">Create chat completion</a>
      */
-    public Future<List<ChatCompletion>> chat(final ChatRequest request,
-                                             final StreamFutureCallback<ChatCompletion> callback)
+    public Future<List<EventStream>> chat(final ChatRequest request,
+                                          final StreamFutureCallback<EventStream> callback)
             throws ApiException, IOException {
         request.setStream(true);
         return executeObject(post("/chat/completions").setEntity(jsonEntity(request)).build(),
-                ChatCompletion.class, callback);
+                EventStream.class, callback);
     }
 
     private <T> HttpEntity jsonEntity(final T request) throws JsonProcessingException {
