@@ -1,6 +1,7 @@
 package io.github.dbstarll.utils.openai;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
@@ -15,12 +16,12 @@ import io.github.dbstarll.utils.openai.model.request.ChatRequest;
 import io.github.dbstarll.utils.openai.model.request.CompletionRequest;
 import io.github.dbstarll.utils.openai.model.response.ApiError;
 import io.github.dbstarll.utils.openai.model.response.Models;
-import org.apache.http.HttpEntity;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.entity.EntityBuilder;
-import org.apache.http.client.methods.HttpUriRequest;
-import org.apache.http.client.methods.RequestBuilder;
-import org.apache.http.entity.ContentType;
+import org.apache.hc.client5.http.classic.HttpClient;
+import org.apache.hc.client5.http.entity.EntityBuilder;
+import org.apache.hc.core5.http.ClassicHttpRequest;
+import org.apache.hc.core5.http.ContentType;
+import org.apache.hc.core5.http.HttpEntity;
+import org.apache.hc.core5.http.io.support.ClassicRequestBuilder;
 
 import java.io.IOException;
 
@@ -50,12 +51,12 @@ public final class OpenAiClient extends JsonApiClient {
     }
 
     @Override
-    protected RequestBuilder preProcessing(final RequestBuilder builder) throws ApiException {
+    protected ClassicRequestBuilder preProcessing(final ClassicRequestBuilder builder) throws ApiException {
         return super.preProcessing(builder).setHeader("Authorization", "Bearer " + apiKey);
     }
 
     @Override
-    protected <T> T postProcessing(final HttpUriRequest request, final T executeResult) throws ApiException {
+    protected <T> T postProcessing(final ClassicHttpRequest request, final T executeResult) throws ApiException {
         final T result = super.postProcessing(request, executeResult);
         if (result instanceof ObjectNode) {
             final JsonNode error = ((ObjectNode) result).get("error");
@@ -102,12 +103,8 @@ public final class OpenAiClient extends JsonApiClient {
      * @see <a href="https://platform.openai.com/docs/api-reference/completions/create">Create completion</a>
      */
     public TextCompletion completions(final CompletionRequest request) throws ApiException, IOException {
-        final String json = mapper.writeValueAsString(request);
-        final HttpEntity entity = EntityBuilder.create().setText(json)
-                .setContentType(ContentType.APPLICATION_JSON).setContentEncoding("UTF-8").build();
-        final HttpUriRequest httpUriRequest = post("/completions").setEntity(entity).build();
-        logger.trace("json: [{}]@{} with {}", httpUriRequest, httpUriRequest.hashCode(), json);
-        return executeObject(httpUriRequest, TextCompletion.class);
+        request.setStream(false);
+        return executeObject(post("/completions").setEntity(jsonEntity(request)).build(), TextCompletion.class);
     }
 
     /**
@@ -120,11 +117,12 @@ public final class OpenAiClient extends JsonApiClient {
      * @see <a href="https://platform.openai.com/docs/api-reference/chat/create">Create chat completion</a>
      */
     public ChatCompletion chat(final ChatRequest request) throws ApiException, IOException {
-        final String json = mapper.writeValueAsString(request);
-        final HttpEntity entity = EntityBuilder.create().setText(json)
+        request.setStream(false);
+        return executeObject(post("/chat/completions").setEntity(jsonEntity(request)).build(), ChatCompletion.class);
+    }
+
+    private <T> HttpEntity jsonEntity(final T request) throws JsonProcessingException {
+        return EntityBuilder.create().setText(mapper.writeValueAsString(request))
                 .setContentType(ContentType.APPLICATION_JSON).setContentEncoding("UTF-8").build();
-        final HttpUriRequest httpUriRequest = post("/chat/completions").setEntity(entity).build();
-        logger.trace("json: [{}]@{} with {}", httpUriRequest, httpUriRequest.hashCode(), json);
-        return executeObject(httpUriRequest, ChatCompletion.class);
     }
 }

@@ -12,7 +12,7 @@ import io.github.dbstarll.utils.openai.model.request.ChatRequest;
 import io.github.dbstarll.utils.openai.model.request.CompletionRequest;
 import io.github.dbstarll.utils.openai.model.response.Models;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.function.ThrowingConsumer;
 
