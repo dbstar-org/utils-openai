@@ -25,11 +25,10 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrowsExactly;
 
-class OpenAiClientTest {
-    private static final String TOKEN_KEY = "OPEN_AI_KEY";
-
+class OpenAiClientTest extends AbstractOpenAiClientTest {
     private void useClient(final ThrowingConsumer<OpenAiClient> consumer) throws Throwable {
-        try (CloseableHttpClient client = proxy(new HttpClientFactory()).setSocketTimeout(5000).setAutomaticRetries(false).build()) {
+        try (CloseableHttpClient client = proxy(new HttpClientFactory()).setSocketTimeout(5000)
+                .setAutomaticRetries(false).build()) {
             consumer.accept(new OpenAiClient(client, new ObjectMapper(), getOpenAiKey()));
         }
     }
@@ -43,24 +42,6 @@ class OpenAiClientTest {
         } else {
             return factory;
         }
-    }
-
-    private String getOpenAiKey() {
-        final String keyFromProperty = System.getProperty(TOKEN_KEY);
-        if (StringUtils.isNotBlank(keyFromProperty)) {
-            return keyFromProperty;
-        }
-
-        final String opts = System.getenv("MAVEN_OPTS");
-        if (StringUtils.isNotBlank(opts)) {
-            for (String opt : StringUtils.split(opts)) {
-                if (opt.startsWith("-D" + TOKEN_KEY + "=")) {
-                    return opt.substring(3 + TOKEN_KEY.length());
-                }
-            }
-        }
-
-        return null;
     }
 
     @Test
@@ -114,7 +95,7 @@ class OpenAiClientTest {
             request.setFrequencyPenalty(null);
             request.setBestOf(null);
             request.setLogitBias(null);
-            final TextCompletion completion = c.completions(request);
+            final TextCompletion completion = c.completion(request);
             assertEquals("text_completion", completion.getObject());
             assertEquals("text-ada-001", completion.getModel());
             assertEquals(1, completion.getChoices().size());
@@ -129,7 +110,7 @@ class OpenAiClientTest {
     void completionsNoModel() throws Throwable {
         useClient(c -> {
             final CompletionRequest request = new CompletionRequest();
-            final ApiErrorException e = assertThrowsExactly(ApiErrorException.class, () -> c.completions(request));
+            final ApiErrorException e = assertThrowsExactly(ApiErrorException.class, () -> c.completion(request));
             assertEquals("ApiError[message='you must provide a model parameter', type='invalid_request_error', param='null', code='null']", e.getApiError().toString());
             assertEquals("you must provide a model parameter", e.getApiError().getMessage());
             assertEquals("invalid_request_error", e.getApiError().getType());

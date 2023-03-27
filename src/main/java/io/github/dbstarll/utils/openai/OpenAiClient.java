@@ -102,7 +102,7 @@ public final class OpenAiClient extends JsonApiClient {
      * @throws IOException  exception on io
      * @see <a href="https://platform.openai.com/docs/api-reference/completions/create">Create completion</a>
      */
-    public TextCompletion completions(final CompletionRequest request) throws ApiException, IOException {
+    public TextCompletion completion(final CompletionRequest request) throws ApiException, IOException {
         request.setStream(false);
         return executeObject(post("/completions").setEntity(jsonEntity(request)).build(), TextCompletion.class);
     }
@@ -111,7 +111,7 @@ public final class OpenAiClient extends JsonApiClient {
      * Creates a completion for the chat message.
      *
      * @param request ChatRequest
-     * @return TextCompletion
+     * @return ChatCompletion
      * @throws ApiException exception on api call
      * @throws IOException  exception on io
      * @see <a href="https://platform.openai.com/docs/api-reference/chat/create">Create chat completion</a>
