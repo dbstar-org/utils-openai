@@ -10,6 +10,7 @@ import io.github.dbstarll.utils.openai.model.fragment.Message;
 import io.github.dbstarll.utils.openai.model.fragment.TextChoice;
 import io.github.dbstarll.utils.openai.model.request.ChatRequest;
 import io.github.dbstarll.utils.openai.model.request.CompletionRequest;
+import io.github.dbstarll.utils.openai.model.response.ApiError;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hc.client5.http.impl.async.CloseableHttpAsyncClient;
 import org.apache.hc.client5.http.impl.async.HttpAsyncClientBuilder;
@@ -19,14 +20,17 @@ import org.apache.hc.core5.http.URIScheme;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.function.ThrowingConsumer;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrowsExactly;
 
 class OpenAiAsyncClientTest extends AbstractOpenAiClientTest {
     private void useClient(final ThrowingConsumer<OpenAiAsyncClient> consumer) throws Throwable {
@@ -43,6 +47,24 @@ class OpenAiAsyncClientTest extends AbstractOpenAiClientTest {
         if (StringUtils.isNoneBlank(httpProxyHost, httpProxyPort)) {
             builder.setProxy(new HttpHost(URIScheme.HTTP.id, httpProxyHost, Integer.parseInt(httpProxyPort)));
         }
+    }
+
+    @Test
+    void completionException() throws Throwable {
+        useClient(c -> {
+            final CompletionRequest request = new CompletionRequest();
+            final MyStreamFutureCallback<TextCompletion> callback = new MyStreamFutureCallback<>();
+            final ExecutionException e = assertThrowsExactly(ExecutionException.class, () -> c.completion(request, callback).get());
+            assertNotNull(e.getCause());
+            assertSame(IOException.class, e.getCause().getClass());
+            assertNotNull(e.getCause().getCause());
+            assertSame(ApiErrorException.class, e.getCause().getCause().getClass());
+            final ApiError apiError = ((ApiErrorException) e.getCause().getCause()).getApiError();
+            assertEquals("you must provide a model parameter", apiError.getMessage());
+            assertEquals("invalid_request_error", apiError.getType());
+            assertNull(apiError.getParam());
+            assertNull(apiError.getCode());
+        });
     }
 
     @Test
