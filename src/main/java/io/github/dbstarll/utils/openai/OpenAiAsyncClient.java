@@ -8,6 +8,8 @@ import io.github.dbstarll.utils.http.client.request.RelativeUriResolver;
 import io.github.dbstarll.utils.json.jackson.JsonApiAsyncClient;
 import io.github.dbstarll.utils.net.api.ApiException;
 import io.github.dbstarll.utils.net.api.StreamFutureCallback;
+import io.github.dbstarll.utils.openai.model.api.ChatCompletionChunk;
+import io.github.dbstarll.utils.openai.model.api.TextCompletion;
 import io.github.dbstarll.utils.openai.model.request.ChatRequest;
 import io.github.dbstarll.utils.openai.model.request.CompletionRequest;
 import org.apache.hc.client5.http.async.HttpAsyncClient;
@@ -17,10 +19,10 @@ import org.apache.hc.core5.http.HttpEntity;
 import org.apache.hc.core5.http.io.support.ClassicRequestBuilder;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.concurrent.Future;
 
 import static org.apache.commons.lang3.Validate.notBlank;
+import static org.apache.commons.lang3.Validate.notNull;
 
 public final class OpenAiAsyncClient extends JsonApiAsyncClient {
     private final String apiKey;
@@ -36,7 +38,6 @@ public final class OpenAiAsyncClient extends JsonApiAsyncClient {
         super(httpClient, true, optimize(mapper.copy()));
         this.apiKey = notBlank(apiKey, "apiKey is blank");
         setUriResolver(new RelativeUriResolver("https://api.openai.com/v1", "/v1"));
-        setResponseHandlerFactory(new EventStreamResponseHandlerFactory(mapper, true));
     }
 
     private static ObjectMapper optimize(final ObjectMapper mapper) {
@@ -67,16 +68,17 @@ public final class OpenAiAsyncClient extends JsonApiAsyncClient {
      *
      * @param request  CompletionRequest
      * @param callback StreamFutureCallback
-     * @return List<EventStream>
+     * @return Void
      * @throws ApiException exception on api call
      * @throws IOException  exception on io
      * @see <a href="https://platform.openai.com/docs/api-reference/completions/create">Create completion</a>
      */
-    public Future<List<EventStream>> completion(final CompletionRequest request,
-                                                final StreamFutureCallback<EventStream> callback)
+    public Future<Void> completion(final CompletionRequest request, final StreamFutureCallback<TextCompletion> callback)
             throws ApiException, IOException {
+        notNull(callback, "callback is null");
         request.setStream(true);
-        return execute(post("/completions").setEntity(jsonEntity(request)).build(), EventStream.class, callback);
+        return execute(post("/completions").setEntity(jsonEntity(request)).build(), TextCompletion.class,
+                new CompletionsCallback<>(callback));
     }
 
     /**
@@ -84,17 +86,17 @@ public final class OpenAiAsyncClient extends JsonApiAsyncClient {
      *
      * @param request  ChatRequest
      * @param callback StreamFutureCallback
-     * @return ChatCompletion
+     * @return Void
      * @throws ApiException exception on api call
      * @throws IOException  exception on io
      * @see <a href="https://platform.openai.com/docs/api-reference/chat/create">Create chat completion</a>
      */
-    public Future<List<EventStream>> chat(final ChatRequest request,
-                                          final StreamFutureCallback<EventStream> callback)
+    public Future<Void> chat(final ChatRequest request, final StreamFutureCallback<ChatCompletionChunk> callback)
             throws ApiException, IOException {
+        notNull(callback, "callback is null");
         request.setStream(true);
-        return executeObject(post("/chat/completions").setEntity(jsonEntity(request)).build(),
-                EventStream.class, callback);
+        return execute(post("/chat/completions").setEntity(jsonEntity(request)).build(),
+                ChatCompletionChunk.class, new CompletionsCallback<>(callback));
     }
 
     private <T> HttpEntity jsonEntity(final T request) throws JsonProcessingException {

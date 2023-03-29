@@ -3,6 +3,12 @@ package io.github.dbstarll.utils.openai;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.dbstarll.utils.http.client.HttpClientFactory;
 import io.github.dbstarll.utils.net.api.StreamFutureCallback;
+import io.github.dbstarll.utils.openai.model.api.ChatCompletionChunk;
+import io.github.dbstarll.utils.openai.model.api.TextCompletion;
+import io.github.dbstarll.utils.openai.model.fragment.ChatChunkChoice;
+import io.github.dbstarll.utils.openai.model.fragment.Message;
+import io.github.dbstarll.utils.openai.model.fragment.TextChoice;
+import io.github.dbstarll.utils.openai.model.request.ChatRequest;
 import io.github.dbstarll.utils.openai.model.request.CompletionRequest;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hc.client5.http.impl.async.CloseableHttpAsyncClient;
@@ -14,9 +20,12 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.function.ThrowingConsumer;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 
 class OpenAiAsyncClientTest extends AbstractOpenAiClientTest {
@@ -43,15 +52,52 @@ class OpenAiAsyncClientTest extends AbstractOpenAiClientTest {
             request.setModel("text-ada-001");
             request.setPrompt("Say this is a test");
 
-            final MyStreamFutureCallback<EventStream> callback = new MyStreamFutureCallback<>();
-            final List<EventStream> completions = c.completion(request, callback).get();
-//            assertEquals("text_completion", completion.getObject());
-//            assertEquals("text-ada-001", completion.getModel());
-//            assertEquals(1, completion.getChoices().size());
-//            final TextChoice choice = completion.getChoices().get(0);
-//            assertEquals(0, choice.getIndex());
-//            assertNotNull(choice.getText());
-//            assertNotNull(choice.getLogprobs());
+            final MyStreamFutureCallback<TextCompletion> callback = new MyStreamFutureCallback<>();
+            assertNull(c.completion(request, callback).get());
+            final StringBuilder builder = new StringBuilder();
+            callback.results.forEach(completion -> {
+                assertEquals("text_completion", completion.getObject());
+                assertEquals("text-ada-001", completion.getModel());
+                assertEquals(1, completion.getChoices().size());
+                final TextChoice choice = completion.getChoices().get(0);
+                assertEquals(0, choice.getIndex());
+                assertNotNull(choice.getText());
+                builder.append(choice.getText());
+            });
+            System.out.println(builder.toString());
+        });
+    }
+
+    @Test
+    void chat() throws Throwable {
+        useClient(c -> {
+            final ChatRequest request = new ChatRequest();
+            request.setModel("gpt-3.5-turbo");
+            request.setMaxTokens(32);
+            request.setMessages(Arrays.asList(
+                    Message.system("You are a helpful assistant."),
+                    Message.user("Hello!"),
+                    Message.assistant("Nice to meet you!"),
+                    Message.user("Say this is a test")));
+            final MyStreamFutureCallback<ChatCompletionChunk> callback = new MyStreamFutureCallback<>();
+            assertNull(c.chat(request, callback).get());
+            final StringBuilder builder = new StringBuilder();
+            callback.results.forEach(completion -> {
+                assertEquals("chat.completion.chunk", completion.getObject());
+                assertEquals("gpt-3.5-turbo-0301", completion.getModel());
+                assertEquals(1, completion.getChoices().size());
+                final ChatChunkChoice choice = completion.getChoices().get(0);
+                assertEquals(0, choice.getIndex());
+                final Message delta = choice.getDelta();
+                assertNotNull(delta);
+                if (delta.getRole() != null) {
+                    builder.append('[').append(delta.getRole()).append(']');
+                }
+                if (delta.getContent() != null) {
+                    builder.append(delta.getContent());
+                }
+            });
+            System.out.println(builder.toString());
         });
     }
 
@@ -114,8 +160,7 @@ class OpenAiAsyncClientTest extends AbstractOpenAiClientTest {
         }
     }
 
-    private static class MyStreamFutureCallback<T> extends MyFutureCallback<List<T>>
-            implements StreamFutureCallback<T> {
+    private static class MyStreamFutureCallback<T> extends MyFutureCallback<Void> implements StreamFutureCallback<T> {
         private final List<T> results = new ArrayList<>();
 
         @Override

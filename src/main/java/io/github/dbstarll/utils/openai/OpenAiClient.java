@@ -58,11 +58,9 @@ public final class OpenAiClient extends JsonApiClient {
     @Override
     protected <T> T postProcessing(final ClassicHttpRequest request, final T executeResult) throws ApiException {
         final T result = super.postProcessing(request, executeResult);
-        if (result instanceof ObjectNode) {
-            final JsonNode error = ((ObjectNode) result).get("error");
-            if (error != null) {
-                throw new ApiErrorException(mapper.convertValue(error, ApiError.class));
-            }
+        final JsonNode error = ((ObjectNode) result).get("error");
+        if (error != null) {
+            throw new ApiErrorException(mapper.convertValue(error, ApiError.class));
         }
         return result;
     }
@@ -77,7 +75,7 @@ public final class OpenAiClient extends JsonApiClient {
      * @see <a href="https://platform.openai.com/docs/api-reference/models/list">List models</a>
      */
     public Models models() throws ApiException, IOException {
-        return executeObject(get("/models").build(), Models.class);
+        return execute(get("/models").build(), Models.class);
     }
 
     /**
@@ -90,7 +88,7 @@ public final class OpenAiClient extends JsonApiClient {
      * @see <a href="https://platform.openai.com/docs/api-reference/models/retrieve">Retrieve model</a>
      */
     public Model model(final String model) throws ApiException, IOException {
-        return executeObject(get("/models/" + notNull(model, "model is Required")).build(), Model.class);
+        return execute(get("/models/" + notNull(model, "model is Required")).build(), Model.class);
     }
 
     /**
@@ -104,7 +102,7 @@ public final class OpenAiClient extends JsonApiClient {
      */
     public TextCompletion completion(final CompletionRequest request) throws ApiException, IOException {
         request.setStream(false);
-        return executeObject(post("/completions").setEntity(jsonEntity(request)).build(), TextCompletion.class);
+        return execute(post("/completions").setEntity(jsonEntity(request)).build(), TextCompletion.class);
     }
 
     /**
@@ -118,7 +116,7 @@ public final class OpenAiClient extends JsonApiClient {
      */
     public ChatCompletion chat(final ChatRequest request) throws ApiException, IOException {
         request.setStream(false);
-        return executeObject(post("/chat/completions").setEntity(jsonEntity(request)).build(), ChatCompletion.class);
+        return execute(post("/chat/completions").setEntity(jsonEntity(request)).build(), ChatCompletion.class);
     }
 
     private <T> HttpEntity jsonEntity(final T request) throws JsonProcessingException {
