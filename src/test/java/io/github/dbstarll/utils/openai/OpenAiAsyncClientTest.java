@@ -64,6 +64,7 @@ class OpenAiAsyncClientTest extends AbstractOpenAiClientTest {
             assertEquals("invalid_request_error", apiError.getType());
             assertNull(apiError.getParam());
             assertNull(apiError.getCode());
+            callback.assertException(e.getCause());
         });
     }
 
