@@ -131,7 +131,6 @@ class OpenAiAsyncClientTest extends AbstractOpenAiClientTest {
 
         private volatile T result;
         private volatile Exception ex;
-        private volatile boolean cancelled;
 
         @Override
         public void completed(T result) {
@@ -153,7 +152,6 @@ class OpenAiAsyncClientTest extends AbstractOpenAiClientTest {
 
         @Override
         public void cancelled() {
-            this.cancelled = true;
             synchronized (lock) {
                 this.called = true;
                 lock.notify();
