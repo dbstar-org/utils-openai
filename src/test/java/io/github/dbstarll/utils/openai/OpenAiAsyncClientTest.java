@@ -73,7 +73,7 @@ class OpenAiAsyncClientTest extends AbstractOpenAiClientTest {
         useClient(c -> {
             final CompletionRequest request = new CompletionRequest();
             request.setModel("text-ada-001");
-            request.setPrompt("Say this is a test");
+            request.setPrompt("你好");
 
             final MyStreamFutureCallback<TextCompletion> callback = new MyStreamFutureCallback<>();
             assertNull(c.completion(request, callback).get());
@@ -101,7 +101,7 @@ class OpenAiAsyncClientTest extends AbstractOpenAiClientTest {
                     Message.system("You are a helpful assistant."),
                     Message.user("Hello!"),
                     Message.assistant("Nice to meet you!"),
-                    Message.user("Say this is a test")));
+                    Message.user("你好")));
             final MyStreamFutureCallback<ChatCompletionChunk> callback = new MyStreamFutureCallback<>();
             assertNull(c.chat(request, callback).get());
             final StringBuilder builder = new StringBuilder();
