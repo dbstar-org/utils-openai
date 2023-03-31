@@ -81,7 +81,7 @@ class OpenAiClientTest extends AbstractOpenAiClientTest {
         useClient(c -> {
             final CompletionRequest request = new CompletionRequest();
             request.setModel("text-ada-001");
-            request.setPrompt("Say this is a test");
+            request.setPrompt("你好");
             request.setLogprobs(2);
             request.setUser("dbstar");
             request.setTemperature(0.2f);
@@ -129,7 +129,7 @@ class OpenAiClientTest extends AbstractOpenAiClientTest {
                     Message.system("You are a helpful assistant."),
                     Message.user("Hello!"),
                     Message.assistant("Nice to meet you!"),
-                    Message.user("Say this is a test")));
+                    Message.user("你好")));
             final ChatCompletion completion = c.chat(request);
             assertEquals("chat.completion", completion.getObject());
             assertEquals("gpt-3.5-turbo-0301", completion.getModel());
