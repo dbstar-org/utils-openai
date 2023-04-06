@@ -11,12 +11,8 @@ import io.github.dbstarll.utils.openai.model.fragment.TextChoice;
 import io.github.dbstarll.utils.openai.model.request.ChatRequest;
 import io.github.dbstarll.utils.openai.model.request.CompletionRequest;
 import io.github.dbstarll.utils.openai.model.response.ApiError;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.hc.client5.http.impl.async.CloseableHttpAsyncClient;
-import org.apache.hc.client5.http.impl.async.HttpAsyncClientBuilder;
 import org.apache.hc.core5.concurrent.FutureCallback;
-import org.apache.hc.core5.http.HttpHost;
-import org.apache.hc.core5.http.URIScheme;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.function.ThrowingConsumer;
 
@@ -35,17 +31,9 @@ import static org.junit.jupiter.api.Assertions.assertThrowsExactly;
 class OpenAiAsyncClientTest extends AbstractOpenAiClientTest {
     private void useClient(final ThrowingConsumer<OpenAiAsyncClient> consumer) throws Throwable {
         try (CloseableHttpAsyncClient client = new HttpClientFactory().setSocketTimeout(5000)
-                .setConnectTimeout(5000).setAutomaticRetries(false).buildAsync(this::proxy)) {
+                .setConnectTimeout(5000).setAutomaticRetries(false).buildAsync()) {
             client.start();
             consumer.accept(new OpenAiAsyncClient(client, new ObjectMapper(), getOpenAiKey()));
-        }
-    }
-
-    private void proxy(final HttpAsyncClientBuilder builder) {
-        final String httpProxyHost = System.getProperty("http.proxyHost");
-        final String httpProxyPort = System.getProperty("http.proxyPort");
-        if (StringUtils.isNoneBlank(httpProxyHost, httpProxyPort)) {
-            builder.setProxy(new HttpHost(URIScheme.HTTP.id, httpProxyHost, Integer.parseInt(httpProxyPort)));
         }
     }
 

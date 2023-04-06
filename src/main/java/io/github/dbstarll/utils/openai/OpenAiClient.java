@@ -10,11 +10,14 @@ import io.github.dbstarll.utils.http.client.request.RelativeUriResolver;
 import io.github.dbstarll.utils.json.jackson.JsonApiClient;
 import io.github.dbstarll.utils.net.api.ApiException;
 import io.github.dbstarll.utils.openai.model.api.ChatCompletion;
+import io.github.dbstarll.utils.openai.model.api.File;
 import io.github.dbstarll.utils.openai.model.api.Model;
 import io.github.dbstarll.utils.openai.model.api.TextCompletion;
 import io.github.dbstarll.utils.openai.model.request.ChatRequest;
 import io.github.dbstarll.utils.openai.model.request.CompletionRequest;
+import io.github.dbstarll.utils.openai.model.request.UploadFileRequest;
 import io.github.dbstarll.utils.openai.model.response.ApiError;
+import io.github.dbstarll.utils.openai.model.response.Files;
 import io.github.dbstarll.utils.openai.model.response.Models;
 import org.apache.hc.client5.http.classic.HttpClient;
 import org.apache.hc.client5.http.entity.EntityBuilder;
@@ -117,6 +120,72 @@ public final class OpenAiClient extends JsonApiClient {
     public ChatCompletion chat(final ChatRequest request) throws ApiException, IOException {
         request.setStream(false);
         return execute(post("/chat/completions").setEntity(jsonEntity(request)).build(), ChatCompletion.class);
+    }
+
+    /**
+     * Returns a list of files that belong to the user's organization.
+     *
+     * @return Files
+     * @throws ApiException exception on api call
+     * @throws IOException  exception on io
+     * @see <a href="https://platform.openai.com/docs/api-reference/files/list">List files</a>
+     */
+    public Files files() throws ApiException, IOException {
+        return execute(get("/files").build(), Files.class);
+    }
+
+    /**
+     * Upload a file that contains document(s) to be used across various endpoints/features.
+     * Currently, the size of all the files uploaded by one organization can be up to 1 GB.
+     *
+     * @param request UploadFileRequest
+     * @return File
+     * @throws ApiException exception on api call
+     * @throws IOException  exception on io
+     * @see <a href="https://platform.openai.com/docs/api-reference/files/upload">Upload file</a>
+     */
+    public File uploadFile(final UploadFileRequest request) throws ApiException, IOException {
+        return execute(post("/files").setEntity(request.buildEntity()).build(), File.class);
+    }
+
+    /**
+     * Delete a file.
+     *
+     * @param fileId The ID of the file to use for this request
+     * @return File
+     * @throws ApiException exception on api call
+     * @throws IOException  exception on io
+     * @see <a href="https://platform.openai.com/docs/api-reference/files/delete">Delete file</a>
+     */
+    public File deleteFile(final String fileId) throws ApiException, IOException {
+        return execute(delete("/files/" + fileId).build(), File.class);
+    }
+
+    /**
+     * Returns information about a specific file.
+     *
+     * @param fileId The ID of the file to use for this request
+     * @return File
+     * @throws ApiException exception on api call
+     * @throws IOException  exception on io
+     * @see <a href="https://platform.openai.com/docs/api-reference/files/retrieve">Retrieve file</a>
+     */
+    public File getFile(final String fileId) throws ApiException, IOException {
+        return execute(get("/files/" + fileId).build(), File.class);
+    }
+
+    /**
+     * Returns the contents of the specified file.
+     * To help mitigate abuse, downloading of fine-tune training files is disabled for free accounts.
+     *
+     * @param fileId The ID of the file to use for this request
+     * @return String
+     * @throws ApiException exception on api call
+     * @throws IOException  exception on io
+     * @see <a href="https://platform.openai.com/docs/api-reference/files/retrieve-content">Retrieve file content</a>
+     */
+    public JsonNode getFileContent(final String fileId) throws ApiException, IOException {
+        return execute(get("/files/" + fileId + "/content").build(), JsonNode.class);
     }
 
     private <T> HttpEntity jsonEntity(final T request) throws JsonProcessingException {
