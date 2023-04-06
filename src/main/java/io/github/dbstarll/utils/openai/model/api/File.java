@@ -11,7 +11,7 @@ public final class File extends Base {
     private String filename;
     private int bytes;
     private String status;
-    private Object statusDetails;
+    private transient Object statusDetails;
     private boolean deleted;
 
     /**

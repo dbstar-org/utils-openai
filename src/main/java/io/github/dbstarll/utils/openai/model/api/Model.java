@@ -6,7 +6,7 @@ import java.util.StringJoiner;
 public final class Model extends Base {
     private String ownedBy;
     private String root;
-    private Object parent;
+    private transient Object parent;
     private List<ModelPermission> permission;
 
     /**

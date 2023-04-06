@@ -158,7 +158,7 @@ public final class OpenAiClient extends JsonApiClient {
      * @see <a href="https://platform.openai.com/docs/api-reference/files/delete">Delete file</a>
      */
     public File deleteFile(final String fileId) throws ApiException, IOException {
-        return execute(delete("/files/" + fileId).build(), File.class);
+        return execute(delete(filePath(fileId)).build(), File.class);
     }
 
     /**
@@ -171,7 +171,7 @@ public final class OpenAiClient extends JsonApiClient {
      * @see <a href="https://platform.openai.com/docs/api-reference/files/retrieve">Retrieve file</a>
      */
     public File getFile(final String fileId) throws ApiException, IOException {
-        return execute(get("/files/" + fileId).build(), File.class);
+        return execute(get(filePath(fileId)).build(), File.class);
     }
 
     /**
@@ -185,7 +185,11 @@ public final class OpenAiClient extends JsonApiClient {
      * @see <a href="https://platform.openai.com/docs/api-reference/files/retrieve-content">Retrieve file content</a>
      */
     public JsonNode getFileContent(final String fileId) throws ApiException, IOException {
-        return execute(get("/files/" + fileId + "/content").build(), JsonNode.class);
+        return execute(get(filePath(fileId) + "/content").build(), JsonNode.class);
+    }
+
+    private String filePath(final String fileId) {
+        return "/files/" + notBlank(fileId, "fileId is blank");
     }
 
     private <T> HttpEntity jsonEntity(final T request) throws JsonProcessingException {
