@@ -30,7 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class OpenAiClientTest extends AbstractOpenAiClientTest {
     private void useClient(final ThrowingConsumer<OpenAiClient> consumer) throws Throwable {
-        try (CloseableHttpClient client = new HttpClientFactory().setSocketTimeout(5000)
+        try (CloseableHttpClient client = new HttpClientFactory().setSocketTimeout(15000)
                 .setAutomaticRetries(false).build()) {
             consumer.accept(new OpenAiClient(client, new ObjectMapper(), getOpenAiKey()));
         }
