@@ -67,7 +67,7 @@ public abstract class BaseCompletion<C extends Choice> extends Base {
 
     @Override
     public final String toString() {
-        return new StringJoiner(", ", getClass().getSimpleName() + "[", "]")
+        return new StringJoiner(", ", super.toString() + "[", "]")
                 .add("model='" + getModel() + "'")
                 .add("usage=" + getUsage())
                 .add("choices=" + getChoices())

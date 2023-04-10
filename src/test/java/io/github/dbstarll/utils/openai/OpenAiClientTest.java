@@ -3,6 +3,7 @@ package io.github.dbstarll.utils.openai;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.dbstarll.utils.http.client.HttpClientFactory;
 import io.github.dbstarll.utils.openai.model.api.ChatCompletion;
+import io.github.dbstarll.utils.openai.model.api.File;
 import io.github.dbstarll.utils.openai.model.api.Model;
 import io.github.dbstarll.utils.openai.model.api.TextCompletion;
 import io.github.dbstarll.utils.openai.model.fragment.ChatChoice;
@@ -10,37 +11,28 @@ import io.github.dbstarll.utils.openai.model.fragment.Message;
 import io.github.dbstarll.utils.openai.model.fragment.TextChoice;
 import io.github.dbstarll.utils.openai.model.request.ChatRequest;
 import io.github.dbstarll.utils.openai.model.request.CompletionRequest;
+import io.github.dbstarll.utils.openai.model.request.UploadFileRequest;
+import io.github.dbstarll.utils.openai.model.response.Files;
 import io.github.dbstarll.utils.openai.model.response.Models;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.function.ThrowingConsumer;
 
-import java.net.Proxy;
-import java.net.Proxy.Type;
+import java.time.Duration;
 import java.util.Arrays;
 
+import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrowsExactly;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class OpenAiClientTest extends AbstractOpenAiClientTest {
     private void useClient(final ThrowingConsumer<OpenAiClient> consumer) throws Throwable {
-        try (CloseableHttpClient client = proxy(new HttpClientFactory()).setSocketTimeout(5000)
+        try (CloseableHttpClient client = new HttpClientFactory().setSocketTimeout(15000)
                 .setAutomaticRetries(false).build()) {
             consumer.accept(new OpenAiClient(client, new ObjectMapper(), getOpenAiKey()));
-        }
-    }
-
-    private HttpClientFactory proxy(final HttpClientFactory factory) {
-        final String socksProxyHost = System.getProperty("socksProxyHost");
-        final String socksProxyPort = System.getProperty("socksProxyPort");
-        if (StringUtils.isNoneBlank(socksProxyHost, socksProxyPort)) {
-            final Proxy proxy = HttpClientFactory.proxy(Type.SOCKS, socksProxyHost, Integer.parseInt(socksProxyPort));
-            return factory.setProxy(proxy).setResolveFromProxy(true);
-        } else {
-            return factory;
         }
     }
 
@@ -137,6 +129,44 @@ class OpenAiClientTest extends AbstractOpenAiClientTest {
             final ChatChoice choice = completion.getChoices().get(0);
             assertEquals(0, choice.getIndex());
             assertNotNull(choice.getMessage());
+        });
+    }
+
+    @Test
+    void files() throws Throwable {
+        useClient(c -> {
+            final Files files = c.files();
+            assertEquals("list", files.getObject());
+            assertNotNull(files.getData());
+
+            // remove old test file
+            for (File file : files.getData()) {
+                if ("processed".equals(file.getStatus()) && "test".equals(file.getFilename()) && 152 == file.getBytes()) {
+                    System.out.println("delete: " + c.deleteFile(file.getId()));
+                }
+            }
+
+            final UploadFileRequest request = new UploadFileRequest("test", OpenAiClientTest.class.getResourceAsStream("/test.jsonl"));
+            final File file = c.uploadFile(request);
+            assertNotNull(file.getId());
+            assertNotNull(file.getCreated());
+            assertEquals("file", file.getObject());
+            assertEquals(UploadFileRequest.PURPOSE_FINE_TUNE, file.getPurpose());
+            assertEquals("test", file.getFilename());
+            assertEquals(152, file.getBytes());
+            assertEquals("uploaded", file.getStatus());
+            assertNull(file.getStatusDetails());
+
+            await().pollInterval(Duration.ofSeconds(1)).pollDelay(Duration.ofSeconds(1)).until(() -> !"uploaded".equals(c.getFile(file.getId()).getStatus()));
+
+            final ApiErrorException e = assertThrowsExactly(ApiErrorException.class, () -> c.getFileContent(file.getId()));
+            assertEquals("To help mitigate abuse, downloading of fine-tune training files is disabled for free accounts.", e.getApiError().getMessage());
+            assertEquals("invalid_request_error", e.getApiError().getType());
+
+            final File del = c.deleteFile(file.getId());
+            assertEquals("file", del.getObject());
+            assertEquals(file.getId(), del.getId());
+            assertTrue(del.isDeleted());
         });
     }
 }
