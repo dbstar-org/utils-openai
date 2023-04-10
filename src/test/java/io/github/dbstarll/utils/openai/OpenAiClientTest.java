@@ -19,6 +19,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.function.ThrowingConsumer;
 
 import java.util.Arrays;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -161,7 +162,7 @@ class OpenAiClientTest extends AbstractOpenAiClientTest {
                 if (!"uploaded".equals(load.getStatus())) {
                     break;
                 }
-                Thread.sleep(1000);
+                TimeUnit.SECONDS.sleep(1);
             }
 
             final ApiErrorException e = assertThrowsExactly(ApiErrorException.class, () -> c.getFileContent(file.getId()));
