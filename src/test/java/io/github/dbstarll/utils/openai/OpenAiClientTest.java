@@ -18,9 +18,10 @@ import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.function.ThrowingConsumer;
 
+import java.time.Duration;
 import java.util.Arrays;
-import java.util.concurrent.TimeUnit;
 
+import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -156,14 +157,7 @@ class OpenAiClientTest extends AbstractOpenAiClientTest {
             assertEquals("uploaded", file.getStatus());
             assertNull(file.getStatusDetails());
 
-            while (true) {
-                final File load = c.getFile(file.getId());
-                assertEquals(file.getCreated(), load.getCreated());
-                if (!"uploaded".equals(load.getStatus())) {
-                    break;
-                }
-                TimeUnit.SECONDS.sleep(1);
-            }
+            await().pollInterval(Duration.ofSeconds(1)).pollDelay(Duration.ofSeconds(1)).until(() -> !"uploaded".equals(c.getFile(file.getId()).getStatus()));
 
             final ApiErrorException e = assertThrowsExactly(ApiErrorException.class, () -> c.getFileContent(file.getId()));
             assertEquals("To help mitigate abuse, downloading of fine-tune training files is disabled for free accounts.", e.getApiError().getMessage());
