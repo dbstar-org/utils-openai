@@ -39,7 +39,7 @@ class OpenAiClientTest extends AbstractOpenAiClientTest {
     @Test
     void models() throws Throwable {
         useClient(c -> {
-            final Models models = c.models();
+            final Models models = c.models().list();
             assertNotNull(models);
             assertEquals("list", models.getObject());
             models.getData().forEach(System.out::println);
@@ -49,7 +49,7 @@ class OpenAiClientTest extends AbstractOpenAiClientTest {
     @Test
     void model() throws Throwable {
         useClient(c -> {
-            final Model model = c.model("gpt-3.5-turbo");
+            final Model model = c.models().get("gpt-3.5-turbo");
             assertNotNull(model);
             assertEquals("gpt-3.5-turbo", model.getId());
             assertEquals("model", model.getObject());
@@ -59,7 +59,7 @@ class OpenAiClientTest extends AbstractOpenAiClientTest {
     @Test
     void modelUnknown() throws Throwable {
         useClient(c -> {
-            final ApiErrorException e = assertThrowsExactly(ApiErrorException.class, () -> c.model("unknown"));
+            final ApiErrorException e = assertThrowsExactly(ApiErrorException.class, () -> c.models().get("unknown"));
             assertEquals("ApiError[message='The model 'unknown' does not exist', type='invalid_request_error', param='model', code='model_not_found']", e.getApiError().toString());
             assertEquals("The model 'unknown' does not exist", e.getApiError().getMessage());
             assertEquals("invalid_request_error", e.getApiError().getType());
@@ -135,19 +135,19 @@ class OpenAiClientTest extends AbstractOpenAiClientTest {
     @Test
     void files() throws Throwable {
         useClient(c -> {
-            final Files files = c.files();
+            final Files files = c.files().list();
             assertEquals("list", files.getObject());
             assertNotNull(files.getData());
 
             // remove old test file
             for (File file : files.getData()) {
                 if ("processed".equals(file.getStatus()) && "test".equals(file.getFilename()) && 152 == file.getBytes()) {
-                    System.out.println("delete: " + c.deleteFile(file.getId()));
+                    System.out.println("delete: " + c.files().delete(file.getId()));
                 }
             }
 
             final UploadFileRequest request = new UploadFileRequest("test", OpenAiClientTest.class.getResourceAsStream("/test.jsonl"));
-            final File file = c.uploadFile(request);
+            final File file = c.files().upload(request);
             assertNotNull(file.getId());
             assertNotNull(file.getCreated());
             assertEquals("file", file.getObject());
@@ -157,13 +157,13 @@ class OpenAiClientTest extends AbstractOpenAiClientTest {
             assertEquals("uploaded", file.getStatus());
             assertNull(file.getStatusDetails());
 
-            await().pollInterval(Duration.ofSeconds(1)).pollDelay(Duration.ofSeconds(1)).until(() -> !"uploaded".equals(c.getFile(file.getId()).getStatus()));
+            await().pollInterval(Duration.ofSeconds(1)).pollDelay(Duration.ofSeconds(1)).until(() -> !"uploaded".equals(c.files().get(file.getId()).getStatus()));
 
-            final ApiErrorException e = assertThrowsExactly(ApiErrorException.class, () -> c.getFileContent(file.getId()));
+            final ApiErrorException e = assertThrowsExactly(ApiErrorException.class, () -> c.files().content(file.getId()));
             assertEquals("To help mitigate abuse, downloading of fine-tune training files is disabled for free accounts.", e.getApiError().getMessage());
             assertEquals("invalid_request_error", e.getApiError().getType());
 
-            final File del = c.deleteFile(file.getId());
+            final File del = c.files().delete(file.getId());
             assertEquals("file", del.getObject());
             assertEquals(file.getId(), del.getId());
             assertTrue(del.isDeleted());
