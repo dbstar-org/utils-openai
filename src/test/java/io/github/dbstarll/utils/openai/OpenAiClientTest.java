@@ -188,6 +188,9 @@ class OpenAiClientTest extends AbstractOpenAiClientTest {
 
             for (FineTune fineTune : fineTunes.getData()) {
                 System.out.println(fineTune.getId() + ": " + fineTune.getStatus() + ", " + fineTune.getFineTunedModel());
+                if ("succeeded".equals(fineTune.getStatus())) {
+                    c.fineTunes().events(fineTune.getId()).getData().forEach(e -> System.out.printf("\t%s: [%s]%s\n", e.getCreated(), e.getLevel(), e.getMessage()));
+                }
             }
 
             final File trainingFile = sampleFile(c);
