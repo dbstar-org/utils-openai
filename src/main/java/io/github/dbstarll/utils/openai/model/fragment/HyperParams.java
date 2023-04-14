@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.io.Serializable;
 import java.util.StringJoiner;
 
-public final class HyperParams implements Serializable {
+public class HyperParams implements Serializable {
     @JsonProperty("n_epochs")
     private Integer numEpochs;
     private Integer batchSize;
@@ -13,11 +13,17 @@ public final class HyperParams implements Serializable {
     private Float promptLossWeight;
 
     /**
-     * get numEpochs.
+     * The number of epochs to train the model for. An epoch refers to one full cycle through the training dataset.
+     *
+     * <p>
+     * integer
+     * Optional
+     * Defaults to 4
+     * </p>
      *
      * @return numEpochs
      */
-    public Integer getNumEpochs() {
+    public final Integer getNumEpochs() {
         return numEpochs;
     }
 
@@ -26,16 +32,28 @@ public final class HyperParams implements Serializable {
      *
      * @param numEpochs numEpochs
      */
-    public void setNumEpochs(final Integer numEpochs) {
+    public final void setNumEpochs(final Integer numEpochs) {
         this.numEpochs = numEpochs;
     }
 
     /**
-     * get batchSize.
+     * The batch size to use for training. The batch size is the number of training examples used to train
+     * a single forward and backward pass.
+     *
+     * <p>
+     * By default, the batch size will be dynamically configured to be ~0.2% of the number of examples in the training
+     * set, capped at 256 - in general, we've found that larger batch sizes tend to work better for larger datasets.
+     * </p>
+     *
+     * <p>
+     * integer
+     * Optional
+     * Defaults to null
+     * </p>
      *
      * @return batchSize
      */
-    public Integer getBatchSize() {
+    public final Integer getBatchSize() {
         return batchSize;
     }
 
@@ -44,16 +62,29 @@ public final class HyperParams implements Serializable {
      *
      * @param batchSize batchSize
      */
-    public void setBatchSize(final Integer batchSize) {
+    public final void setBatchSize(final Integer batchSize) {
         this.batchSize = batchSize;
     }
 
     /**
-     * get learningRateMultiplier.
+     * The learning rate multiplier to use for training. The fine-tuning learning rate is the original
+     * learning rate used for pretraining multiplied by this value.
+     *
+     * <p>
+     * By default, the learning rate multiplier is the 0.05, 0.1, or 0.2 depending on final batch_size
+     * (larger learning rates tend to perform better with larger batch sizes). We recommend experimenting
+     * with values in the range 0.02 to 0.2 to see what produces the best results.
+     * </p>
+     *
+     * <p>
+     * number
+     * Optional
+     * Defaults to null
+     * </p>
      *
      * @return learningRateMultiplier
      */
-    public Float getLearningRateMultiplier() {
+    public final Float getLearningRateMultiplier() {
         return learningRateMultiplier;
     }
 
@@ -62,16 +93,29 @@ public final class HyperParams implements Serializable {
      *
      * @param learningRateMultiplier learningRateMultiplier
      */
-    public void setLearningRateMultiplier(final Float learningRateMultiplier) {
+    public final void setLearningRateMultiplier(final Float learningRateMultiplier) {
         this.learningRateMultiplier = learningRateMultiplier;
     }
 
     /**
-     * get promptLossWeight.
+     * The weight to use for loss on the prompt tokens. This controls how much the model tries to
+     * learn to generate the prompt (as compared to the completion which always has a weight of 1.0),
+     * and can add a stabilizing effect to training when completions are short.
+     *
+     * <p>
+     * If prompts are extremely long (relative to completions), it may make sense to reduce this weight
+     * so as to avoid over-prioritizing learning the prompt.
+     * </p>
+     *
+     * <p>
+     * number
+     * Optional
+     * Defaults to 0.01
+     * </p>
      *
      * @return promptLossWeight
      */
-    public Float getPromptLossWeight() {
+    public final Float getPromptLossWeight() {
         return promptLossWeight;
     }
 
@@ -80,13 +124,13 @@ public final class HyperParams implements Serializable {
      *
      * @param promptLossWeight promptLossWeight
      */
-    public void setPromptLossWeight(final Float promptLossWeight) {
+    public final void setPromptLossWeight(final Float promptLossWeight) {
         this.promptLossWeight = promptLossWeight;
     }
 
     @Override
     public String toString() {
-        return new StringJoiner(", ", HyperParams.class.getSimpleName() + "[", "]")
+        return new StringJoiner(", ", getClass().getSimpleName() + "[", "]")
                 .add("numEpochs=" + getNumEpochs())
                 .add("batchSize=" + getBatchSize())
                 .add("learningRateMultiplier=" + getLearningRateMultiplier())

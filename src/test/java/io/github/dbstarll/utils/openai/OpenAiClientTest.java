@@ -231,6 +231,7 @@ class OpenAiClientTest extends AbstractOpenAiClientTest {
             assertEquals(2, get.getEvents().size());
 
             final FineTuneEvents events = c.fineTunes().events(fineTune.getId());
+            assertEquals("list", events.getObject());
             assertEquals(2, events.getData().size());
         });
     }
