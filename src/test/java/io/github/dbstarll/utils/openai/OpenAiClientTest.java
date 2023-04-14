@@ -239,6 +239,39 @@ class OpenAiClientTest extends AbstractOpenAiClientTest {
         });
     }
 
+    @Test
+    void fineTunesSucceeded() throws Throwable {
+        useClient(c -> {
+            final File trainingFile = sampleFile(c);
+            final CreateFineTuneRequest request = new CreateFineTuneRequest();
+            request.setTrainingFile(trainingFile.getId());
+            request.setModel("ada");
+            request.setSuffix("test");
+            final FineTune fineTune = c.fineTunes().create(request);
+            assertEquals("fine-tune", fineTune.getObject());
+            assertEquals("ada", fineTune.getModel());
+            assertEquals(1, fineTune.getTrainingFiles().size());
+            assertEquals(trainingFile.getId(), fineTune.getTrainingFiles().get(0).getId());
+            assertEquals(0, fineTune.getValidationFiles().size());
+            assertEquals(0, fineTune.getResultFiles().size());
+            assertEquals("pending", fineTune.getStatus());
+            assertEquals(1, fineTune.getEvents().size());
+            final FineTuneEvent event = fineTune.getEvents().get(0);
+            assertEquals("fine-tune-event", event.getObject());
+            assertEquals("info", event.getLevel());
+            assertEquals("Created fine-tune: " + fineTune.getId(), event.getMessage());
+
+            await().atMost(Duration.ofMinutes(10)).pollInterval(Duration.ofSeconds(5))
+                    .until(() -> "succeeded".equals(c.fineTunes().get(fineTune.getId()).getStatus()));
+
+            final FineTune succeeded = c.fineTunes().get(fineTune.getId());
+            System.out.println(succeeded.getId() + ": " + succeeded.getStatus() + ", " + succeeded.getFineTunedModel());
+            succeeded.getEvents().forEach(e -> System.out.printf("\t%s: [%s]%s\n", e.getCreated(), e.getLevel(), e.getMessage()));
+            final Model model = c.models().delete(succeeded.getFineTunedModel());
+            assertTrue(model.isDeleted());
+        });
+    }
+
     private File sampleFile(final OpenAiClient client) throws IOException, ApiException {
         final AtomicReference<File> fileRef = new AtomicReference<>();
         final Optional<File> match = client.files().list().getData().stream().filter(f -> "sample".equals(f.getFilename())).findFirst();
