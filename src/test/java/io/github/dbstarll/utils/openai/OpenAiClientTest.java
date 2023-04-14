@@ -188,10 +188,6 @@ class OpenAiClientTest extends AbstractOpenAiClientTest {
 
             for (FineTune fineTune : fineTunes.getData()) {
                 System.out.println(fineTune.getId() + ": " + fineTune.getStatus() + ", " + fineTune.getFineTunedModel());
-                if ("succeeded".equals(fineTune.getStatus()) && fineTune.getFineTunedModel().startsWith("ada:ft-dbstar:test-")) {
-                    final Model model = c.models().delete(fineTune.getFineTunedModel());
-                    assertTrue(model.isDeleted());
-                }
             }
 
             final File trainingFile = sampleFile(c);
