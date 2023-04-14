@@ -8,6 +8,7 @@ public final class Model extends Base {
     private String root;
     private transient Object parent;
     private List<ModelPermission> permission;
+    private boolean deleted;
 
     /**
      * 获得ownedBy.
@@ -79,6 +80,24 @@ public final class Model extends Base {
      */
     public void setPermission(final List<ModelPermission> permission) {
         this.permission = permission;
+    }
+
+    /**
+     * get deleted.
+     *
+     * @return deleted
+     */
+    public boolean isDeleted() {
+        return deleted;
+    }
+
+    /**
+     * set deleted.
+     *
+     * @param deleted deleted
+     */
+    public void setDeleted(final boolean deleted) {
+        this.deleted = deleted;
     }
 
     @Override

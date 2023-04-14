@@ -11,13 +11,17 @@ import io.github.dbstarll.utils.json.jackson.JsonApiClient;
 import io.github.dbstarll.utils.net.api.ApiException;
 import io.github.dbstarll.utils.openai.model.api.ChatCompletion;
 import io.github.dbstarll.utils.openai.model.api.File;
+import io.github.dbstarll.utils.openai.model.api.FineTune;
 import io.github.dbstarll.utils.openai.model.api.Model;
 import io.github.dbstarll.utils.openai.model.api.TextCompletion;
 import io.github.dbstarll.utils.openai.model.request.ChatRequest;
 import io.github.dbstarll.utils.openai.model.request.CompletionRequest;
+import io.github.dbstarll.utils.openai.model.request.CreateFineTuneRequest;
 import io.github.dbstarll.utils.openai.model.request.UploadFileRequest;
 import io.github.dbstarll.utils.openai.model.response.ApiError;
 import io.github.dbstarll.utils.openai.model.response.Files;
+import io.github.dbstarll.utils.openai.model.response.FineTuneEvents;
+import io.github.dbstarll.utils.openai.model.response.FineTunes;
 import io.github.dbstarll.utils.openai.model.response.Models;
 import org.apache.hc.client5.http.classic.HttpClient;
 import org.apache.hc.client5.http.entity.EntityBuilder;
@@ -34,6 +38,7 @@ public final class OpenAiClient extends JsonApiClient {
     private final String apiKey;
     private final ModelOperations modelOperations;
     private final FileOperations fileOperations;
+    private final FineTuneOperations fineTuneOperations;
 
     /**
      * 构造OpenAiClient实例.
@@ -48,6 +53,7 @@ public final class OpenAiClient extends JsonApiClient {
         setUriResolver(new RelativeUriResolver("https://api.openai.com/v1", "/v1"));
         this.modelOperations = new ModelOperations();
         this.fileOperations = new FileOperations();
+        this.fineTuneOperations = new FineTuneOperations();
     }
 
     private static ObjectMapper optimize(final ObjectMapper mapper) {
@@ -114,15 +120,6 @@ public final class OpenAiClient extends JsonApiClient {
         return modelOperations;
     }
 
-    /**
-     * Files are used to upload documents that can be used with features like Fine-tuning.
-     *
-     * @return FileOperations
-     */
-    public FileOperations files() {
-        return fileOperations;
-    }
-
     public final class ModelOperations {
         private static final String PREFIX = "/models";
 
@@ -152,6 +149,30 @@ public final class OpenAiClient extends JsonApiClient {
             notBlank(model, "model is Required");
             return execute(OpenAiClient.this.get(PREFIX + "/" + model).build(), Model.class);
         }
+
+        /**
+         * Delete a fine-tuned model. You must have the Owner role in your organization.
+         *
+         * @param model The model to delete
+         * @return Model
+         * @throws ApiException exception on api call
+         * @throws IOException  exception on io
+         * @see <a href="https://platform.openai.com/docs/api-reference/fine-tunes/delete-model">
+         * Delete fine-tune model</a>
+         */
+        public Model delete(final String model) throws ApiException, IOException {
+            notBlank(model, "model is Required");
+            return execute(OpenAiClient.this.delete(PREFIX + "/" + model).build(), Model.class);
+        }
+    }
+
+    /**
+     * Files are used to upload documents that can be used with features like Fine-tuning.
+     *
+     * @return FileOperations
+     */
+    public FileOperations files() {
+        return fileOperations;
     }
 
     public final class FileOperations {
@@ -226,6 +247,87 @@ public final class OpenAiClient extends JsonApiClient {
 
         private String filePath(final String fileId) {
             return PREFIX + "/" + notBlank(fileId, "fileId is blank");
+        }
+    }
+
+    /**
+     * Manage fine-tuning jobs to tailor a model to your specific training data.
+     *
+     * @return FineTuneOperations
+     */
+    public FineTuneOperations fineTunes() {
+        return fineTuneOperations;
+    }
+
+    public final class FineTuneOperations {
+        private static final String PREFIX = "/fine-tunes";
+
+        /**
+         * List your organization's fine-tuning jobs.
+         *
+         * @return FineTunes
+         * @throws ApiException exception on api call
+         * @throws IOException  exception on io
+         * @see <a href="https://platform.openai.com/docs/api-reference/fine-tunes/list">List fine-tunes</a>
+         */
+        public FineTunes list() throws ApiException, IOException {
+            return execute(OpenAiClient.this.get(PREFIX).build(), FineTunes.class);
+        }
+
+        /**
+         * Creates a job that fine-tunes a specified model from a given dataset.
+         *
+         * @param request CreateFineTuneRequest
+         * @return FineTune
+         * @throws ApiException exception on api call
+         * @throws IOException  exception on io
+         * @see <a href="https://platform.openai.com/docs/api-reference/fine-tunes/create">Create fine-tune</a>
+         */
+        public FineTune create(final CreateFineTuneRequest request) throws ApiException, IOException {
+            return execute(OpenAiClient.this.post(PREFIX).setEntity(jsonEntity(request)).build(), FineTune.class);
+        }
+
+        /**
+         * Gets info about the fine-tune job.
+         *
+         * @param fineTuneId The ID of the fine-tune job
+         * @return FineTune
+         * @throws ApiException exception on api call
+         * @throws IOException  exception on io
+         * @see <a href="https://platform.openai.com/docs/api-reference/fine-tunes/retrieve">Retrieve fine-tune</a>
+         */
+        public FineTune get(final String fineTuneId) throws ApiException, IOException {
+            return execute(OpenAiClient.this.get(fineTunePath(fineTuneId)).build(), FineTune.class);
+        }
+
+        /**
+         * Get fine-grained status updates for a fine-tune job.
+         *
+         * @param fineTuneId The ID of the fine-tune job
+         * @return FineTuneEvents
+         * @throws ApiException exception on api call
+         * @throws IOException  exception on io
+         * @see <a href="https://platform.openai.com/docs/api-reference/fine-tunes/events">List fine-tune events</a>
+         */
+        public FineTuneEvents events(final String fineTuneId) throws ApiException, IOException {
+            return execute(OpenAiClient.this.get(fineTunePath(fineTuneId) + "/events").build(), FineTuneEvents.class);
+        }
+
+        /**
+         * Immediately cancel a fine-tune job.
+         *
+         * @param fineTuneId The ID of the fine-tune job
+         * @return FineTune
+         * @throws ApiException exception on api call
+         * @throws IOException  exception on io
+         * @see <a href="https://platform.openai.com/docs/api-reference/fine-tunes/cancel">Cancel fine-tune</a>
+         */
+        public FineTune cancel(final String fineTuneId) throws ApiException, IOException {
+            return execute(OpenAiClient.this.post(fineTunePath(fineTuneId) + "/cancel").build(), FineTune.class);
+        }
+
+        private String fineTunePath(final String fineTuneId) {
+            return PREFIX + "/" + notBlank(fineTuneId, "fineTuneId is blank");
         }
     }
 }
